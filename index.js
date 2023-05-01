@@ -1,0 +1,115 @@
+const { Server } = require("socket.io");
+
+const redis = require("redis");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const User = require("./models/User");
+
+dotenv.config();
+
+mongoose.connect(process.env.MONGO_URL).then(
+  () => {
+    console.log("Connected to MongoDB");
+  },
+  (err) => {
+    console.log(err);
+  }
+);
+
+const client = redis.createClient({
+  password: "UIP7q0E2geJbisn8ytyNWAsrhZmsIRzJ",
+  socket: {
+    host: "redis-19631.c263.us-east-1-2.ec2.cloud.redislabs.com",
+    port: 19631,
+  },
+});
+
+client.connect().then(
+  () => {
+    console.log("connected to redis");
+  },
+  (err) => {
+    console.log(err);
+  }
+);
+
+client.on("error", (error) => {
+  console.log(`Error is ${error}`);
+});
+
+const io = new Server(8900, {
+  cors: {
+    origin: "http://localhost:3000",
+  },
+});
+
+let onlineUsers = new Map();
+
+async function addUser(userId, socketId) {
+  //onlineUsers.set(userId, socketId);
+  console.log(`I've added the user ${userId}`);
+  await client.set(userId, socketId);
+  io.emit("getUser", userId);
+}
+
+async function removeUser(userId) {
+  //onlineUsers.delete(userId);
+  await client.del(userId);
+  console.log("user removed!");
+}
+
+async function getUser(userId) {
+  //return onlineUsers.get(userId);
+  return await client.get(userId);
+}
+
+async function sendUserKeys(socket) {
+  console.log("sending the whole object");
+  const keys = await client.keys("*");
+  io.to(socket.id).emit("getUsers", keys);
+}
+
+async function sendMessage(receiverId, message) {
+  const socketId = await getUser(receiverId);
+  const user = await User.findById(message.senderId).lean();
+
+  if (socketId) {
+    console.log(socketId);
+    io.to(socketId).emit("getMessageNotification", {
+      message,
+      senderName: user.full_name,
+    });
+    io.to(socketId).emit("getMessage", message);
+    console.log(`I've sent the message: ${message}`);
+  }
+}
+
+io.on("connection", (socket) => {
+  console.log(`a user connected ${socket.handshake.query["userId"]}`);
+
+  sendUserKeys(socket);
+
+  socket.on("getUserId", (userId) => {
+    if (userId) {
+      addUser(userId, socket.id);
+    } else {
+      console.log("id is null");
+    }
+  });
+
+  socket.on("sendMessage", (receiverId, message) => {
+    sendMessage(receiverId, message);
+  });
+
+  socket.on("manualDisconnect", () => {
+    console.log(`manual disconnect from ${socket.handshake.query["userId"]}`);
+    removeUser(socket.handshake.query["userId"]);
+    io.emit("removeUser", socket.handshake.query["userId"]);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`a user disconnected ${socket.handshake.query["userId"]}`);
+    removeUser(socket.handshake.query["userId"]);
+    io.emit("removeUser", socket.handshake.query["userId"]);
+  });
+});
