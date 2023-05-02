@@ -37,7 +37,7 @@ client.on("error", (error) => {
   console.log(`Error is ${error}`);
 });
 
-const io = new Server(8900, {
+const io = new Server(8080, {
   cors: {
     origin: process.env.ORIGIN,
   },
