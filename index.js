@@ -17,10 +17,10 @@ mongoose.connect(process.env.MONGO_URL).then(
 );
 
 const client = redis.createClient({
-  password: "UIP7q0E2geJbisn8ytyNWAsrhZmsIRzJ",
+  password: process.env.REDIS_PASSWORD,
   socket: {
-    host: "redis-19631.c263.us-east-1-2.ec2.cloud.redislabs.com",
-    port: 19631,
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
   },
 });
 
@@ -39,7 +39,7 @@ client.on("error", (error) => {
 
 const io = new Server(8900, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.ORIGIN,
   },
 });
 
