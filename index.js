@@ -77,7 +77,7 @@ async function sendMessage(receiverId, message) {
     console.log(socketId);
     io.to(socketId).emit("getMessageNotification", {
       message,
-      senderName: user.full_name,
+      senderName: user.first_name + " " + user.last_name,
     });
     io.to(socketId).emit("getMessage", message);
     console.log(`I've sent the message: ${message}`);
