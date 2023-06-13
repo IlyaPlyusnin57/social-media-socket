@@ -74,11 +74,9 @@ async function sendMessage(receiverId, message) {
   const user = await User.findById(message.senderId).lean();
 
   if (socketId) {
-    console.log(socketId);
-    io.to(socketId).emit("getMessageNotification", {
-      message,
-      senderName: user.first_name + " " + user.last_name,
-    });
+    message.senderName = user.first_name + " " + user.last_name;
+
+    io.to(socketId).emit("getMessageNotification", message);
     io.to(socketId).emit("getMessage", message);
     console.log(`I've sent the message: ${message}`);
   }
