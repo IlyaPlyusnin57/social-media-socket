@@ -82,6 +82,17 @@ async function sendMessage(receiverId, message) {
   }
 }
 
+async function sendFollow(followObject) {
+  const { followedUser } = followObject;
+
+  const socketId = await getUser(followedUser._id);
+
+  if (socketId) {
+    console.log("sentFollowNotification");
+    io.to(socketId).emit("getFollowNotification", followObject);
+  }
+}
+
 io.on("connection", (socket) => {
   console.log(`a user connected ${socket.handshake.query["userId"]}`);
 
@@ -93,6 +104,10 @@ io.on("connection", (socket) => {
     } else {
       console.log("id is null");
     }
+  });
+
+  socket.on("sendFollow", (followObject) => {
+    sendFollow(followObject);
   });
 
   socket.on("sendMessage", (receiverId, message) => {
