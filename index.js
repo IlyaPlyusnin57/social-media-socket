@@ -4,6 +4,7 @@ const redis = require("redis");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const User = require("./models/User");
+const axios = require("axios");
 
 dotenv.config();
 
@@ -78,7 +79,14 @@ async function sendMessage(receiverId, message) {
 
     io.to(socketId).emit("getMessageNotification", message);
     io.to(socketId).emit("getMessage", message);
-    console.log(`I've sent the message: ${message}`);
+  } else {
+    try {
+      await axios.patch(process.env.UPDATE_NOTIFICATIONS + receiverId, {
+        message,
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 
