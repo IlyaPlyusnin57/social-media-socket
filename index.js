@@ -60,8 +60,13 @@ async function removeUser(userId) {
 }
 
 async function getUser(userId) {
-  //return onlineUsers.get(userId);
-  return await client.get(userId);
+  if (!userId) return false;
+
+  try {
+    return await client.get(userId);
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 async function sendUserKeys(socket) {
@@ -87,6 +92,15 @@ async function sendMessage(receiverId, message) {
     } catch (error) {
       console.log(error);
     }
+  }
+}
+
+async function sendLike(likeObject) {
+  const { likedUser } = likeObject;
+  const socketId = await getUser(likedUser);
+
+  if (socketId) {
+    io.to(socketId).emit("getLikeNotification", likeObject);
   }
 }
 
@@ -120,6 +134,10 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", (receiverId, message) => {
     sendMessage(receiverId, message);
+  });
+
+  socket.on("sendLike", (likeObject) => {
+    sendLike(likeObject);
   });
 
   socket.on("manualDisconnect", () => {
