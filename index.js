@@ -77,11 +77,8 @@ async function sendUserKeys(socket) {
 
 async function sendMessage(receiverId, message) {
   const socketId = await getUser(receiverId);
-  const user = await User.findById(message.senderId).lean();
 
   if (socketId) {
-    message.senderName = user.first_name + " " + user.last_name;
-
     io.to(socketId).emit("getMessageNotification", message);
     io.to(socketId).emit("getMessage", message);
   } else {
