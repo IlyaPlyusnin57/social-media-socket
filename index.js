@@ -112,6 +112,17 @@ async function sendFollow(followObject) {
   }
 }
 
+async function sendTags(tagObjects) {
+  tagObjects.forEach(async (object) => {
+    const { likedUser } = object;
+    const socketId = await getUser(likedUser);
+
+    if (socketId) {
+      io.to(socketId).emit("getLikeNotification", object);
+    }
+  });
+}
+
 io.on("connection", (socket) => {
   console.log(`a user connected ${socket.handshake.query["userId"]}`);
 
@@ -135,6 +146,10 @@ io.on("connection", (socket) => {
 
   socket.on("sendLike", (likeObject) => {
     sendLike(likeObject);
+  });
+
+  socket.on("sendTags", (tagObjects) => {
+    sendTags(tagObjects);
   });
 
   socket.on("manualDisconnect", () => {
