@@ -123,6 +123,15 @@ async function sendTags(tagObjects) {
   });
 }
 
+async function sendComment(commentObject) {
+  const { likedUser } = commentObject;
+  const socketId = await getUser(likedUser);
+
+  if (socketId) {
+    io.to(socketId).emit("getCommentNotification", commentObject);
+  }
+}
+
 io.on("connection", (socket) => {
   console.log(`a user connected ${socket.handshake.query["userId"]}`);
 
@@ -150,6 +159,10 @@ io.on("connection", (socket) => {
 
   socket.on("sendTags", (tagObjects) => {
     sendTags(tagObjects);
+  });
+
+  socket.on("sendComment", (commentObject) => {
+    sendComment(commentObject);
   });
 
   socket.on("manualDisconnect", () => {
