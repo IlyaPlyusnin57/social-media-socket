@@ -132,6 +132,14 @@ async function sendComment(commentObject) {
   }
 }
 
+async function sendBlockNotification(userId, blockObject) {
+  const socketId = await getUser(userId);
+
+  if (socketId) {
+    io.to(socketId).emit("getBlockNotification", blockObject);
+  }
+}
+
 io.on("connection", (socket) => {
   console.log(`a user connected ${socket.handshake.query["userId"]}`);
 
@@ -143,6 +151,10 @@ io.on("connection", (socket) => {
     } else {
       console.log("id is null");
     }
+  });
+
+  socket.on("sendBlockNotification", (userId, blockObject) => {
+    sendBlockNotification(userId, blockObject);
   });
 
   socket.on("sendFollow", (followObject) => {
