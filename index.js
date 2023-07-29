@@ -132,11 +132,11 @@ async function sendComment(commentObject) {
   }
 }
 
-async function sendBlockNotification(userId, blockObject) {
+async function sendBlockNotification(userId, blockObject, isBlocking) {
   const socketId = await getUser(userId);
 
   if (socketId) {
-    io.to(socketId).emit("getBlockNotification", blockObject);
+    io.to(socketId).emit("getBlockNotification", blockObject, isBlocking);
   }
 }
 
@@ -153,8 +153,8 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("sendBlockNotification", (userId, blockObject) => {
-    sendBlockNotification(userId, blockObject);
+  socket.on("sendBlockNotification", (userId, blockObject, isBlocking) => {
+    sendBlockNotification(userId, blockObject, isBlocking);
   });
 
   socket.on("sendFollow", (followObject) => {
